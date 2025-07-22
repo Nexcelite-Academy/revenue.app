@@ -6,7 +6,8 @@ import os
 
 def create_app(config_name=None):
     """Application factory pattern"""
-    app = Flask(__name__)
+    # Configure Flask to serve static files from the 'static' directory
+    app = Flask(__name__, static_folder='static', static_url_path='')
     
     # Load configuration
     config_name = config_name or os.getenv('FLASK_ENV', 'development')
@@ -39,25 +40,22 @@ def create_app(config_name=None):
     def health_check():
         return {"status": "healthy", "message": "Tutoring Center API is running"}
     
+    # Serve frontend
     @app.route('/')
-    def index():
-        return {
-            "message": "Tutoring Center Management API", 
-            "version": "1.0.0",
-            "endpoints": {
-                "health": "/health",
-                "students": f"{api_prefix}/students",
-                "teachers": f"{api_prefix}/teachers", 
-                "courses": f"{api_prefix}/courses",
-                "payments": f"{api_prefix}/payments",
-                "sessions": f"{api_prefix}/sessions",
-                "expenses": f"{api_prefix}/expenses",
-                "reports": f"{api_prefix}/reports"
-            }
-        }
+    def serve_frontend():
+        return app.send_static_file('index.html')
     
     return app
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=5000, debug=True) 
+    
+    # Railway provides PORT environment variable
+    port = int(os.environ.get('PORT', 5000))
+    
+    # Run with Railway-compatible settings
+    app.run(
+        host='0.0.0.0',  # Railway needs this
+        port=port,
+        debug=os.environ.get('FLASK_ENV') == 'development'
+    ) 
