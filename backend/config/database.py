@@ -32,12 +32,22 @@ def init_db():
     print(f"Creating tables with database URL: {DATABASE_URL}")
     
     # Import all models to ensure they're registered with Base
-    from backend.models.student import Student
-    from backend.models.teacher import Teacher
-    from backend.models.course import Course
-    from backend.models.payment import Payment
-    from backend.models.session import Session
-    from backend.models.expense import Expense
+    try:
+        # Try relative imports first (for Railway deployment)
+        from models.student import Student
+        from models.teacher import Teacher
+        from models.course import Course
+        from models.payment import Payment
+        from models.session import Session
+        from models.expense import Expense
+    except ImportError:
+        # Fallback to absolute imports (for local development)
+        from backend.models.student import Student
+        from backend.models.teacher import Teacher
+        from backend.models.course import Course
+        from backend.models.payment import Payment
+        from backend.models.session import Session
+        from backend.models.expense import Expense
     
     Base.metadata.create_all(bind=engine)
     print("All tables created successfully!") 
