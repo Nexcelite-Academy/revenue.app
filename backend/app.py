@@ -40,6 +40,26 @@ def create_app(config_name=None):
     def health_check():
         return {"status": "healthy", "message": "Tutoring Center API is running"}
     
+    # Database initialization endpoint
+    @app.route('/init-db', methods=['POST'])
+    def initialize_database():
+        try:
+            from config.database import init_db
+            init_db()
+            return {"status": "success", "message": "Database tables created successfully!"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}, 500
+    
+    # Sample data seeding endpoint  
+    @app.route('/seed-data', methods=['POST'])
+    def seed_sample_data():
+        try:
+            from seed_data import create_sample_data
+            create_sample_data()
+            return {"status": "success", "message": "Sample data created successfully!"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}, 500
+    
     # Serve frontend
     @app.route('/')
     def serve_frontend():
