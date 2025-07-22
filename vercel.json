@@ -5,6 +5,14 @@
     {
       "src": "backend/app.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "*.{css,js}",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -13,11 +21,28 @@
       "dest": "backend/app.py"
     },
     {
-      "src": "/(.*)",
+      "src": "/health",
+      "dest": "backend/app.py"
+    },
+    {
+      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico))",
       "dest": "/$1"
+    },
+    {
+      "src": "/",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "env": {
     "FLASK_ENV": "production"
+  },
+  "functions": {
+    "backend/app.py": {
+      "runtime": "python3.9"
+    }
   }
 } 
