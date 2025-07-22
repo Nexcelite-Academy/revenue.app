@@ -5,7 +5,8 @@
 
 class ApiService {
   constructor() {
-    this.baseURL = 'http://localhost:5000/api/v1';
+    // Use relative URLs so it works on both localhost and Railway
+    this.baseURL = '/api/v1';
     this.isLoading = false;
     this.loadingCallbacks = [];
   }
@@ -285,7 +286,7 @@ class ApiService {
 
   // Health check
   async healthCheck() {
-    return fetch('http://localhost:5000/health').then(r => r.json());
+    return fetch('/health').then(r => r.json());
   }
 }
 

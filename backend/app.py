@@ -14,7 +14,13 @@ def create_app(config_name=None):
     
     # Initialize CORS with explicit configuration
     CORS(app, 
-         origins=['http://localhost:8080', 'http://127.0.0.1:8080', 'file://', 'null'],
+         origins=[
+             'http://localhost:8080', 
+             'http://127.0.0.1:8080', 
+             'https://web-production-14e3.up.railway.app',
+             'file://', 
+             'null'
+         ],
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
          allow_headers=['Content-Type', 'Authorization'],
          supports_credentials=True)
