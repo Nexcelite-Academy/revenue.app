@@ -5,23 +5,9 @@
 
 class ApiService {
   constructor() {
-    // Detect environment and set appropriate base URL
-    this.baseURL = this.getApiBaseURL();
+    this.baseURL = 'http://localhost:5000/api/v1';
     this.isLoading = false;
     this.loadingCallbacks = [];
-  }
-
-  /**
-   * Get the appropriate API base URL based on environment
-   */
-  getApiBaseURL() {
-    // Production/Vercel deployment
-    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return ''; // Use relative URLs for Vercel
-    }
-    
-    // Local development
-    return 'http://localhost:5000';
   }
 
   // Loading state management
@@ -34,25 +20,9 @@ class ApiService {
     this.loadingCallbacks.push(callback);
   }
 
-  showGlobalLoading() {
-    this.setLoading(true);
-    const loader = document.getElementById('globalLoader');
-    if (loader) {
-      loader.style.display = 'flex';
-    }
-  }
-
-  hideGlobalLoading() {
-    this.setLoading(false);
-    const loader = document.getElementById('globalLoader');
-    if (loader) {
-      loader.style.display = 'none';
-    }
-  }
-
   // Generic HTTP methods
   async request(endpoint, options = {}) {
-    const url = `${this.baseURL}/api/v1${endpoint}`;
+    const url = `${this.baseURL}${endpoint}`;
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -61,40 +31,39 @@ class ApiService {
       ...options
     };
 
-    this.showGlobalLoading();
+    this.setLoading(true);
     
     try {
       const response = await fetch(url, config);
       const data = await response.json();
-
+      
       if (!response.ok) {
         throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
       }
-
+      
       return data;
     } catch (error) {
       console.error(`API Error [${endpoint}]:`, error);
       throw error;
     } finally {
-      this.hideGlobalLoading();
+      this.setLoading(false);
     }
   }
 
   async get(endpoint, params = {}) {
-    const queryString = Object.keys(params).length
-      ? '?' + new URLSearchParams(params).toString()
-      : '';
-    return this.request(`${endpoint}${queryString}`);
+    const searchParams = new URLSearchParams(params);
+    const url = searchParams.toString() ? `${endpoint}?${searchParams}` : endpoint;
+    return this.request(url);
   }
 
-  async post(endpoint, data = {}) {
+  async post(endpoint, data) {
     return this.request(endpoint, {
       method: 'POST',
       body: JSON.stringify(data)
     });
   }
 
-  async put(endpoint, data = {}) {
+  async put(endpoint, data) {
     return this.request(endpoint, {
       method: 'PUT',
       body: JSON.stringify(data)
@@ -105,16 +74,6 @@ class ApiService {
     return this.request(endpoint, {
       method: 'DELETE'
     });
-  }
-
-  // Health check
-  async healthCheck() {
-    try {
-      const response = await fetch(`${this.baseURL}/health`);
-      return response.ok;
-    } catch {
-      return false;
-    }
   }
 
   // Students API
@@ -136,6 +95,10 @@ class ApiService {
 
   async deleteStudent(id) {
     return this.delete(`/students/${id}/`);
+  }
+
+  async getStudentBalance(studentId, courseName) {
+    return this.get(`/students/${studentId}/balance/${encodeURIComponent(courseName)}`);
   }
 
   async updateStudentBalance(studentId, courseName, hoursChange) {
@@ -201,6 +164,13 @@ class ApiService {
     return this.delete(`/courses/${id}/`);
   }
 
+  async getCourseStats(id, startDate = '', endDate = '') {
+    const params = {};
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    return this.get(`/courses/${id}/stats`, params);
+  }
+
   // Payments API
   async getPayments(filters = {}) {
     return this.get('/payments/', filters);
@@ -220,6 +190,13 @@ class ApiService {
 
   async deletePayment(id) {
     return this.delete(`/payments/${id}/`);
+  }
+
+  async getPaymentSummary(startDate = '', endDate = '') {
+    const params = {};
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    return this.get('/payments/summary', params);
   }
 
   // Sessions API
@@ -243,6 +220,13 @@ class ApiService {
     return this.delete(`/sessions/${id}/`);
   }
 
+  async getSessionSummary(startDate = '', endDate = '') {
+    const params = {};
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    return this.get('/sessions/summary', params);
+  }
+
   // Expenses API
   async getExpenses(filters = {}) {
     return this.get('/expenses/', filters);
@@ -264,85 +248,87 @@ class ApiService {
     return this.delete(`/expenses/${id}/`);
   }
 
+  async getExpenseCategories() {
+    return this.get('/expenses/categories/');
+  }
+
+  async getExpenseSummary(startDate = '', endDate = '') {
+    const params = {};
+    if (startDate) params.start_date = startDate;
+    if (endDate) params.end_date = endDate;
+    return this.get('/expenses/summary', params);
+  }
+
   // Reports API
   async getDashboardData() {
-    return this.get('/reports/dashboard/');
+    return this.get('/reports/dashboard');
   }
 
   async getFinancialReport(startDate = '', endDate = '') {
     const params = {};
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
-    return this.get('/reports/financial/', params);
+    return this.get('/reports/financial', params);
   }
 
   async getAttendanceReport(startDate = '', endDate = '') {
     const params = {};
     if (startDate) params.start_date = startDate;
     if (endDate) params.end_date = endDate;
-    return this.get('/reports/attendance/', params);
+    return this.get('/reports/attendance', params);
   }
 
   async exportFinancialCsv(startDate, endDate) {
-    const url = `${this.baseURL}/api/v1/reports/export/csv?start_date=${startDate}&end_date=${endDate}`;
+    const url = `${this.baseURL}/reports/export/csv?start_date=${startDate}&end_date=${endDate}`;
     window.open(url, '_blank');
+  }
+
+  // Health check
+  async healthCheck() {
+    return fetch('http://localhost:5000/health').then(r => r.json());
   }
 }
 
 // Global API instance
 window.api = new ApiService();
 
-// Global error handler
-window.handleApiError = function(error, context = '') {
-  console.error(`Error during ${context}:`, error);
+// Global error handler for API errors
+window.handleApiError = function(error, operation = 'operation') {
+  console.error(`Error during ${operation}:`, error);
   
-  const message = error.message || 'An unexpected error occurred';
-  const errorDiv = document.createElement('div');
-  errorDiv.className = 'alert alert-danger alert-dismissible fade show';
-  errorDiv.innerHTML = `
-    <strong>Error ${context ? `during ${context}` : ''}:</strong> ${message}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-  `;
+  let message = 'An unexpected error occurred.';
+  if (error.message) {
+    message = error.message;
+  }
   
-  const container = document.getElementById('view-container');
-  if (container) {
-    container.insertBefore(errorDiv, container.firstChild);
+  // Show error to user (you can customize this)
+  if (typeof showToast === 'function') {
+    showToast(message, 'error');
+  } else {
+    alert(`Error: ${message}`);
   }
 };
 
-// Toast notification system
-window.showToast = function(message, type = 'info', duration = 5000) {
-  const toastContainer = document.getElementById('toastContainer');
-  if (!toastContainer) return;
+// Loading indicator helpers
+window.showLoading = function() {
+  const loader = document.getElementById('globalLoader');
+  if (loader) {
+    loader.style.display = 'block';
+  }
+};
 
-  const toastId = 'toast-' + Date.now();
-  const bgClass = {
-    'success': 'bg-success',
-    'error': 'bg-danger', 
-    'warning': 'bg-warning',
-    'info': 'bg-info'
-  }[type] || 'bg-info';
+window.hideLoading = function() {
+  const loader = document.getElementById('globalLoader');
+  if (loader) {
+    loader.style.display = 'none';
+  }
+};
 
-  const toastHtml = `
-    <div id="${toastId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-      <div class="toast-header ${bgClass} text-white">
-        <strong class="me-auto">Notification</strong>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
-      </div>
-      <div class="toast-body">
-        ${message}
-      </div>
-    </div>
-  `;
-
-  toastContainer.insertAdjacentHTML('beforeend', toastHtml);
-  
-  const toastElement = document.getElementById(toastId);
-  const toast = new bootstrap.Toast(toastElement, { delay: duration });
-  toast.show();
-
-  // Remove from DOM after hiding
-  toastElement.addEventListener('hidden.bs.toast', () => {
-    toastElement.remove();
-  });
-}; 
+// Initialize loading state management
+window.api.onLoadingChange((isLoading) => {
+  if (isLoading) {
+    showLoading();
+  } else {
+    hideLoading();
+  }
+}); 
