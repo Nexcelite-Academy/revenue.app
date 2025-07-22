@@ -29,4 +29,15 @@ def get_db():
 
 def init_db():
     """Initialize database - create all tables"""
-    Base.metadata.create_all(bind=engine) 
+    print(f"Creating tables with database URL: {DATABASE_URL}")
+    
+    # Import all models to ensure they're registered with Base
+    from backend.models.student import Student
+    from backend.models.teacher import Teacher
+    from backend.models.course import Course
+    from backend.models.payment import Payment
+    from backend.models.session import Session
+    from backend.models.expense import Expense
+    
+    Base.metadata.create_all(bind=engine)
+    print("All tables created successfully!") 

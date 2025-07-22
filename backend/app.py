@@ -26,7 +26,13 @@ def create_app(config_name=None):
          supports_credentials=True)
     
     # Initialize database
-    init_db()
+    try:
+        print("Initializing database...")
+        init_db()
+        print("Database initialized successfully!")
+    except Exception as e:
+        print(f"Database initialization error: {e}")
+        # Continue anyway - the app might still work
     
     # Register blueprints (routes)
     from api.routes import students, teachers, courses, payments, sessions, expenses, reports
