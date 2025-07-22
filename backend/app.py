@@ -12,9 +12,9 @@ def create_app(config_name=None):
     config_name = config_name or os.getenv('FLASK_ENV', 'development')
     app.config.from_object(config[config_name])
     
-    # Initialize CORS with explicit configuration
+    # Initialize CORS for Vercel deployment
     CORS(app, 
-         origins=['http://localhost:8080', 'http://127.0.0.1:8080', 'file://', 'null'],
+         origins=['*'],  # Allow all origins for Vercel
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
          allow_headers=['Content-Type', 'Authorization'],
          supports_credentials=True)
@@ -39,25 +39,16 @@ def create_app(config_name=None):
     def health_check():
         return {"status": "healthy", "message": "Tutoring Center API is running"}
     
+    # Vercel compatibility
     @app.route('/')
     def index():
-        return {
-            "message": "Tutoring Center Management API", 
-            "version": "1.0.0",
-            "endpoints": {
-                "health": "/health",
-                "students": f"{api_prefix}/students",
-                "teachers": f"{api_prefix}/teachers", 
-                "courses": f"{api_prefix}/courses",
-                "payments": f"{api_prefix}/payments",
-                "sessions": f"{api_prefix}/sessions",
-                "expenses": f"{api_prefix}/expenses",
-                "reports": f"{api_prefix}/reports"
-            }
-        }
+        return {"message": "EduManagement API", "status": "running", "version": "1.0.0"}
     
     return app
 
+# For Vercel deployment
+app = create_app()
+
+# For local development
 if __name__ == '__main__':
-    app = create_app()
-    app.run(host='0.0.0.0', port=5000, debug=True) 
+    app.run(debug=True, host='0.0.0.0', port=5000) 

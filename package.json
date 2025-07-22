@@ -1,0 +1,26 @@
+{
+  "name": "edumanagement",
+  "version": "1.0.0",
+  "description": "Advanced Grade-Based Pricing Tutoring Center Management System",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8080",
+    "start": "python -m http.server 8080",
+    "build": "echo 'No build step required for vanilla JS frontend'"
+  },
+  "keywords": [
+    "tutoring",
+    "education",
+    "management",
+    "grade-based-pricing",
+    "flask",
+    "javascript"
+  ],
+  "author": "Nexcelite Academy",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nexcelite-Academy/revenue.app.git"
+  },
+  "homepage": "https://github.com/Nexcelite-Academy/revenue.app#readme"
+} 

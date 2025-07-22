@@ -1,52 +1,59 @@
 /**
- * API Service Layer for Tutoring Center Management
- * Handles all communication with the backend Flask API
+ * API Service for EduManagement System
+ * Handles all communication with the backend API
+ * Now with Vercel deployment support
  */
 
 class ApiService {
   constructor() {
-    this.baseURL = 'http://localhost:5000/api/v1';
-    this.isLoading = false;
-    this.loadingCallbacks = [];
+    // Detect environment and set appropriate base URL
+    this.baseURL = this.getApiBaseURL();
+    this.loadingStates = new Set();
   }
 
-  // Loading state management
-  setLoading(loading) {
-    this.isLoading = loading;
-    this.loadingCallbacks.forEach(callback => callback(loading));
+  /**
+   * Get the appropriate API base URL based on environment
+   */
+  getApiBaseURL() {
+    // Production/Vercel deployment
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return ''; // Use relative URLs for Vercel
+    }
+    
+    // Local development
+    return 'http://localhost:5000';
   }
 
-  onLoadingChange(callback) {
-    this.loadingCallbacks.push(callback);
-  }
-
-  // Generic HTTP methods
+  /**
+   * Generic request method with loading states and error handling
+   */
   async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
-    const config = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
-    };
-
-    this.setLoading(true);
+    const url = `${this.baseURL}/api/v1${endpoint}`;
+    
+    // Show global loading indicator
+    this.showGlobalLoading();
     
     try {
-      const response = await fetch(url, config);
-      const data = await response.json();
-      
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        },
+        ...options
+      });
+
       if (!response.ok) {
-        throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
+      const data = await response.json();
       return data;
     } catch (error) {
       console.error(`API Error [${endpoint}]:`, error);
       throw error;
     } finally {
-      this.setLoading(false);
+      this.hideGlobalLoading();
     }
   }
 
@@ -279,7 +286,7 @@ class ApiService {
   }
 
   async exportFinancialCsv(startDate, endDate) {
-    const url = `${this.baseURL}/reports/export/csv?start_date=${startDate}&end_date=${endDate}`;
+    const url = `${this.baseURL}/api/v1/reports/export/csv?start_date=${startDate}&end_date=${endDate}`;
     window.open(url, '_blank');
   }
 
